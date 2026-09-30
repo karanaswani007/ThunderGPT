@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "katex/dist/katex.min.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card);
+  --color-card-foreground: var(--fg);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--fg-muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--fg);
+  --color-bolt: var(--bolt);
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+}
+
+:root {
+  --bg: #f4f6fb;
+  --fg: #0c1220;
+  --card: #ffffff;
+  --muted: #e8edf6;
+  --fg-muted: #5b6b82;
+  --primary: #0b6fd6;
+  --primary-fg: #f8fbff;
+  --accent: #0b6fd6;
+  --accent-fg: #f8fbff;
+  --border: color-mix(in oklab, #0c1220 12%, transparent);
+  --input: color-mix(in oklab, #0c1220 10%, transparent);
+  --ring: #3da4ff;
+  --destructive: #c24141;
+  --sidebar: #eef2f8;
+  --bolt: #0b6fd6;
+  --hero-wash: color-mix(in oklab, #0b6fd6 6%, transparent);
+}
+
+.dark {
+  --bg: #070b14;
+  --fg: #eef3fb;
+  --card: #101826;
+  --muted: #172033;
+  --fg-muted: #8b9bb4;
+  --primary: #3db4ff;
+  --primary-fg: #041018;
+  --accent: #3db4ff;
+  --accent-fg: #041018;
+  --border: color-mix(in oklab, #eef3fb 12%, transparent);
+  --input: color-mix(in oklab, #eef3fb 10%, transparent);
+  --ring: #5ec8ff;
+  --destructive: #f07171;
+  --sidebar: #0b1220;
+  --bolt: #3db4ff;
+  --hero-wash: color-mix(in oklab, #3db4ff 8%, transparent);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.thunder-grid {
+  background-image:
+    linear-gradient(var(--hero-wash), transparent 42%),
+    radial-gradient(1200px 480px at 80% -10%, color-mix(in oklab, var(--bolt) 18%, transparent), transparent 60%);
+}
+
+.bolt-rail {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--bolt) 16%, transparent), transparent 28%),
+    var(--sidebar);
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--fg) 12%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.msg-enter {
+  animation: msg-in 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.caret-blink {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  border-radius: 1px;
+  background: var(--bolt);
+  vertical-align: text-bottom;
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% { opacity: 0; }
+}
+
+.prose-thunder {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.prose-thunder > :first-child { margin-top: 0; }
+.prose-thunder > :last-child { margin-bottom: 0; }
+.prose-thunder p { margin: 0.7em 0; }
+.prose-thunder h1, .prose-thunder h2, .prose-thunder h3 {
+  margin: 1.1em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.prose-thunder h1 { font-size: 1.35rem; }
+.prose-thunder h2 { font-size: 1.2rem; }
+.prose-thunder h3 { font-size: 1.05rem; }
+.prose-thunder ul, .prose-thunder ol { margin: 0.6em 0; padding-left: 1.25rem; }
+.prose-thunder li { margin: 0.25em 0; }
+.prose-thunder blockquote {
+  margin: 0.8em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 2px solid var(--bolt);
+  color: var(--fg-muted);
+}
+.prose-thunder a {
+  color: var(--bolt);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-thunder table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.92em;
+}
+.prose-thunder th, .prose-thunder td {
+  border: 1px solid var(--border);
+  padding: 0.45em 0.7em;
+  text-align: left;
+}
+.prose-thunder th { background: var(--muted); font-weight: 600; }
+.prose-thunder hr { border: 0; border-top: 1px solid var(--border); margin: 1.2em 0; }
+.prose-thunder :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--muted);
+  padding: 0.12em 0.38em;
+  border-radius: 6px;
+}
+.prose-thunder pre {
+  margin: 0.85em 0;
+  padding: 0.95em 1em;
+  overflow-x: auto;
+  background: #0b1220;
+  color: #e8eef8;
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  line-height: 1.55;
+}
+.dark .prose-thunder pre {
+  background: #080d16;
+  border: 1px solid color-mix(in oklab, #eef3fb 8%, transparent);
+}
+.hljs-keyword, .hljs-selector-tag { color: #7dc4ff; }
+.hljs-string, .hljs-attr { color: #9ee7c4; }
+.hljs-number, .hljs-literal { color: #ffc978; }
+.hljs-comment { color: #7d8ba3; font-style: italic; }
+.hljs-function, .hljs-title { color: #c3b4ff; }
+.hljs-built_in, .hljs-type { color: #7ee0ff; }

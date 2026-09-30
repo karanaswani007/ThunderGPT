@@ -1,0 +1,32 @@
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+screenshots/*.png
+/screenshots/app-builder-preview.json
+.vercel/
+.tanstack/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Generated workspace state
+.grok/app-env.json
+.grok/preview.log
+.grok/preview.pid
+.grok/og-pending
+
+# Logs and OS/editor artifacts
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
