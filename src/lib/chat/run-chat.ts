@@ -133,6 +133,10 @@ export async function runChatStream(opts: {
           const result = await provider.generateImage({
             prompt: request.message,
             aspectRatio: request.aspectRatio,
+            referenceImageBase64: attachments.find((attachment) => attachment.kind === "image")
+              ?.dataBase64,
+            referenceMimeType: attachments.find((attachment) => attachment.kind === "image")
+              ?.mimeType,
             abortSignal,
           });
           const imageId = newId();
@@ -177,17 +181,16 @@ export async function runChatStream(opts: {
               ok: true,
             });
           }
-          push(controller, { type: "image", id: imageId, mimeType: result.mimeType });
+          push(controller, {
+            type: "image",
+            id: imageId,
+            mimeType: result.mimeType,
+            dataBase64: userId ? undefined : result.dataBase64,
+          });
           push(controller, {
             type: "delta",
             text: `Here's the image I generated for **${request.message}**.`,
           });
-          if (!userId) {
-            push(controller, {
-              type: "delta",
-              text: `\n\n![generated](data:${result.mimeType};base64,${result.dataBase64})`,
-            });
-          }
           const title = await generateTitle(request.message);
           if (userId) await touchConversation(userId, conversationId, { title });
           push(controller, { type: "title", title });

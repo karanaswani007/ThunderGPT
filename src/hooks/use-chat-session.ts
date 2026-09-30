@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { ChatMessage, LogicalModelId } from "@/lib/ai/types";
+import type { ChatAttachment, ChatMessage, LogicalModelId } from "@/lib/ai/types";
 import type { ConversationRow } from "@/lib/db-rows";
 import { apiFetch } from "@/lib/client/api-fetch";
 import {
@@ -33,6 +33,45 @@ export function useChatSession(opts: {
   const [webSearch, setWebSearch] = useState(false);
   const [imageMode, setImageMode] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const pendingTextRef = useRef("");
+  const activeAssistantRef = useRef<string | null>(null);
+  const lastDeltaAtRef = useRef(0);
+
+  useEffect(() => {
+    const flush = (text: string) => {
+      const assistantId = activeAssistantRef.current;
+      if (!assistantId || !text) return;
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === assistantId
+            ? { ...message, content: message.content + text }
+            : message,
+        ),
+      );
+    };
+
+    if (!streaming) {
+      flush(pendingTextRef.current);
+      pendingTextRef.current = "";
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      const pending = pendingTextRef.current;
+      if (!pending) return;
+      const boundary = pending.search(/\s/);
+      if (boundary >= 0) {
+        const end = boundary + 1;
+        flush(pending.slice(0, end));
+        pendingTextRef.current = pending.slice(end);
+      } else if (Date.now() - lastDeltaAtRef.current > 120) {
+        flush(pending);
+        pendingTextRef.current = "";
+      }
+    }, 24);
+
+    return () => window.clearInterval(timer);
+  }, [streaming]);
 
   const refreshList = useCallback(async () => {
     if (opts.signedIn) {
@@ -101,6 +140,9 @@ export function useChatSession(opts: {
         })),
       };
       const assistantId = newId();
+      pendingTextRef.current = "";
+      activeAssistantRef.current = assistantId;
+      let generatedAttachments: ChatAttachment[] = [];
       setMessages((prev) => {
         let next = prev;
         if (extra.editMessageId) {
@@ -176,10 +218,28 @@ export function useChatSession(opts: {
               }
             } else if (ev.type === "delta") {
               assembled += ev.text;
-              const chunk = ev.text;
+              pendingTextRef.current += ev.text;
+              lastDeltaAtRef.current = Date.now();
+            } else if (ev.type === "image") {
+              const attachment: ChatAttachment = {
+                id: ev.id,
+                filename: "generated-image.png",
+                mimeType: ev.mimeType,
+                sizeBytes: ev.dataBase64
+                  ? Math.floor((ev.dataBase64.length * 3) / 4)
+                  : 0,
+                kind: "generated",
+                dataBase64: ev.dataBase64,
+              };
+              generatedAttachments = [...generatedAttachments, attachment];
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantId ? { ...m, content: m.content + chunk } : m,
+                prev.map((message) =>
+                  message.id === assistantId
+                    ? {
+                        ...message,
+                        attachments: [...(message.attachments ?? []), attachment],
+                      }
+                    : message,
                 ),
               );
             } else if (ev.type === "error") {
@@ -220,6 +280,7 @@ export function useChatSession(opts: {
             id: assistantId,
             role: "assistant",
             content: assembled,
+            attachments: generatedAttachments,
             createdAt: now,
           };
           const conv: ConversationRow = {

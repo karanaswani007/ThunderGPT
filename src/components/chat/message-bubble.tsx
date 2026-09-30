@@ -56,7 +56,9 @@ export function MessageBubble({
                     src={
                       a.dataBase64
                         ? `data:${a.mimeType};base64,${a.dataBase64}`
-                        : undefined
+                        : a.kind === "generated"
+                          ? `/api/images/${encodeURIComponent(a.id)}`
+                          : undefined
                     }
                     alt={a.filename}
                     className="max-h-56 rounded-xl border border-border object-cover"

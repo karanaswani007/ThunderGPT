@@ -3,7 +3,7 @@ export type ClientEvent =
   | { type: "delta"; text: string }
   | { type: "sources"; sources: Array<{ title: string; url: string }> }
   | { type: "title"; title: string }
-  | { type: "image"; id: string; mimeType: string }
+  | { type: "image"; id: string; mimeType: string; dataBase64?: string }
   | { type: "done"; messageId: string; model: string; conversationId: string }
   | { type: "error"; message: string };
 

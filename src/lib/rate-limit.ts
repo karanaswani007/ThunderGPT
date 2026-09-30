@@ -5,10 +5,10 @@ const store = new Map<string, Bucket>();
 const WINDOW_MS = 60 * 60 * 1000;
 
 export const LIMITS = {
-  guestChat: 8,
+  guestChat: 30,
   authChat: 80,
-  authImage: 12,
-  guestImage: 2,
+  authImage: 20,
+  guestImage: 5,
   title: 40,
 } as const;
 
