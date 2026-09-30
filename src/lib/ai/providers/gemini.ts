@@ -1,4 +1,5 @@
 import { env } from "@/lib/env.server";
+import { parseSseJson } from "./sse";
 import { geminiModelMap } from "../model-config";
 import { ThunderError, categorizeProviderStatus } from "../errors";
 import type {
@@ -43,40 +44,6 @@ function toParts(
   }
   if (parts.length === 0) parts.push({ text: content || " " });
   return parts;
-}
-
-async function* parseSse(
-  body: ReadableStream<Uint8Array>,
-  abortSignal?: AbortSignal,
-): AsyncGenerator<Record<string, unknown>> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  try {
-    while (true) {
-      if (abortSignal?.aborted) break;
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const chunks = buffer.split("\n\n");
-      buffer = chunks.pop() ?? "";
-      for (const chunk of chunks) {
-        const line = chunk
-          .split("\n")
-          .filter((l) => l.startsWith("data:"))
-          .map((l) => l.slice(5).trim())
-          .join("");
-        if (!line || line === "[DONE]") continue;
-        try {
-          yield JSON.parse(line) as Record<string, unknown>;
-        } catch {
-          /* ignore malformed */
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
 }
 
 function extractText(payload: Record<string, unknown>): string {
@@ -145,7 +112,7 @@ export const geminiProvider: AIProvider = {
     }
     if (!res.body) throw new ThunderError("Empty response from Gemini.");
     let lastSources: StreamEvent | null = null;
-    for await (const payload of parseSse(res.body, input.abortSignal)) {
+    for await (const payload of parseSseJson(res.body, input.abortSignal)) {
       const text = extractText(payload);
       if (text) yield { type: "delta", text };
       const sources = extractSources(payload);
